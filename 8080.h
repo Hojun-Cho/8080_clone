@@ -60,9 +60,16 @@ static const char* DISASSEMBLE_TABLE[] = {
 	"rst 6", "rm", "sphl", "jm $", "ei", "cm $", "ill", "cpi #", "rst 7"
 };
 
-typedef struct i8080 {
-	uint8_t (*read_byte)(void*, uint16_t); // read from memory 
-	void (*write_byte)(void*, uint16_t, uint8_t); // write to memory
+typedef struct i8080 :q
+{
+	// run opcode
+	void (*execute) (i8080 *self, uint8_t opcode);
+	// memory read, write
+	uint8_t (*fetch) (i8080 *self);
+	void (*write_byte) (i8080 *self, uint16_t addr, uint8_t val);
+	// port io read, write
+	uint8_t (*port_in)(i8080 *self, uint8_t port);
+	void (*port_out)(i8080 *self, uint8_t port, uint8_t val);
 
 	uint32_t cyc;
 	uint16_t pc, sp;
