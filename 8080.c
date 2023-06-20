@@ -41,27 +41,36 @@ void i8080_add(i8080 *const c, uint8_t *reg, uint8_t val, bool cf)
 	i8080_set_zsp(c, result);
 }
 
+static inline
+uint8_t i8080_hl(i8080 *const c)
+{
+	return (c->h << 8) | c->l;
+}
+
 void i8080_exec(i8080 *const c, uint8_t opcode)
 {
 	c->cyc += OPCODES_CYCLES[opcode];
 
 	switch (opcode) 
 	{
+		// ADD opcode
 		case 0x80:
-			i8080_add(c, &c->a, c->b, c->cf); break;
+			i8080_add(c, &c->a, c->b, 0); break;
 		case 0x81:
-			i8080_add(c, &c->a, c->c, c->cf); break;
+			i8080_add(c, &c->a, c->c, 0); break;
 		case 0x82:
-			i8080_add(c, &c->a, c->d, c->cf); break;
+			i8080_add(c, &c->a, c->d, 0); break;
 		case 0x83:
-			i8080_add(c, &c->a, c->e, c->cf); break;
+			i8080_add(c, &c->a, c->e, 0); break;
 		case 0x84:
-			i8080_add(c, &c->a, c->h, c->cf); break;
+			i8080_add(c, &c->a, c->h, 0); break;
 		case 0x85:
-			i8080_add(c, &c->a, c->l, c->cf); break;
+			i8080_add(c, &c->a, c->l, 0); break;
 		case 0x87:
-			i8080_add(c, &c->a, c->a, c->cf); break;
-
+			i8080_add(c, &c->a, c->a, 0); break;
+		case 0x86:
+			i8080_add(c, &c->a, c->read_byte(c, i8080_hl(c)), 0);
+			break;
 		case 0x00:
 		case 0x10:
 		case 0x20:
