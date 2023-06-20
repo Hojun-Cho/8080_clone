@@ -60,7 +60,8 @@ static const char* DISASSEMBLE_TABLE[] = {
 	"rst 6", "rm", "sphl", "jm $", "ei", "cm $", "ill", "cpi #", "rst 7"
 };
 
-typedef struct i8080
+typedef struct cpu_i8080 i8080;
+struct cpu_i8080
 {
 	uint8_t (*read_byte)(i8080*, uint16_t); // read from memroy
 	void (*write_byte)(i8080*, uint16_t, uint8_t); // write to memory
@@ -73,10 +74,8 @@ typedef struct i8080
 	uint8_t a, b, c, d, e, h, l; 
 	// sign , zero , half carry, parity carry, carry flag, interrupt flip-flop
 	bool sf, zf, hf, pf , cf, iff;
-	bool hlted;
 };
 
-void i8080_init(i8080 *const c);
-void i8080_exec(i8080 *const c);
+void i8080_exec(i8080 *const c, uint8_t opcode);
 
 #endif
