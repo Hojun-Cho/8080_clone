@@ -53,23 +53,36 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 
 	switch (opcode) 
 	{
-		// ADD opcode
-		case 0x80:
-			i8080_add(c, &c->a, c->b, 0); break;
-		case 0x81:
-			i8080_add(c, &c->a, c->c, 0); break;
-		case 0x82:
-			i8080_add(c, &c->a, c->d, 0); break;
-		case 0x83:
-			i8080_add(c, &c->a, c->e, 0); break;
-		case 0x84:
-			i8080_add(c, &c->a, c->h, 0); break;
-		case 0x85:
-			i8080_add(c, &c->a, c->l, 0); break;
-		case 0x87:
-			i8080_add(c, &c->a, c->a, 0); break;
-		case 0x86:
-			i8080_add(c, &c->a, c->read_byte(c, i8080_hl(c)), 0);
+		// ADD
+		case 0x80: i8080_add(c, &c->a, c->b, 0); break;
+		case 0x81: i8080_add(c, &c->a, c->c, 0); break;
+		case 0x82: i8080_add(c, &c->a, c->d, 0); break;
+		case 0x83: i8080_add(c, &c->a, c->e, 0); break;
+		case 0x84: i8080_add(c, &c->a, c->h, 0); break;
+		case 0x85: i8080_add(c, &c->a, c->l, 0); break;
+		case 0x87: i8080_add(c, &c->a, c->a, 0); break;
+		// ADC 
+		case 0x88: i8080_add(c, &c->a, c->b, c->cf); break;
+		case 0x89: i8080_add(c, &c->a, c->c, c->cf); break;
+		case 0x8a: i8080_add(c, &c->a, c->d, c->cf); break;
+		case 0x8b: i8080_add(c, &c->a, c->e, c->cf); break;
+		case 0x8c: i8080_add(c, &c->a, c->h, c->cf); break;
+		case 0x8d: i8080_add(c, &c->a, c->l, c->cf); break;
+		case 0x8f: i8080_add(c, &c->a, c->a, c->cf); break;
+		// ADC M
+		case 0x8e:
+			i8080_add(c, &c->a, c->read_byte(c, i8080_hl(c)), c->cf);
+			break;		
+		// ADD M
+		case 0x86: i8080_add(c, &c->a, c->read_byte(c, i8080_hl(c)), 0);
+			break;
+		// ADI
+		case 0xc6:
+			i8080_add(c, &c->a, c->read_byte(c, c->pc++), 0);
+			break;
+		// ACI
+		case 0xce:
+			i8080_add(c, &c->a, c->read_byte(c, c->pc++), c->cf);
 			break;
 		case 0x00:
 		case 0x10:
