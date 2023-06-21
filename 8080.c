@@ -41,6 +41,21 @@ void i8080_add(i8080 *const c, uint8_t *reg, uint8_t val, bool cf)
 	i8080_set_zsp(c, result);
 }
 
+/*
+ * if i8080_add set cf flag:
+ *	cf = false
+ * else 
+ *	cf = true
+ * @param val : ((~val), !cf ) it's operation of  two's complement
+ * @param cf  : 0 if SUB else 1 , case of else is SUB
+*/
+static inline
+void i8080_sub(i8080 *const c, uint8_t *reg, uint8_t val, bool cf)
+{
+	i8080_add(c, reg, ~val, !cf);
+	c->cf = !c->cf;
+}
+
 static inline
 uint8_t i8080_hl(i8080 *const c)
 {
@@ -83,7 +98,16 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		// ACI
 		case 0xce:
 			i8080_add(c, &c->a, c->read_byte(c, c->pc++), c->cf);
-			break;
+			break;		
+		// SUB M
+		case 0x90: i8080_sub(c, &c->a, c->b, 0); break;
+		case 0x91: i8080_sub(c, &c->a, c->c, 0); break;
+		case 0x92: i8080_sub(c, &c->a, c->d, 0); break;
+		case 0x93: i8080_sub(c, &c->a, c->e, 0); break;
+		case 0x94: i8080_sub(c, &c->a, c->h, 0); break;
+		case 0x95: i8080_sub(c, &c->a, c->l, 0); break;
+		case 0x97: i8080_sub(c, &c->a, c->a, 0); break;
+		// NOP
 		case 0x00:
 		case 0x10:
 		case 0x20:
@@ -92,7 +116,7 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x18:
 		case 0x28:
 		case 0x38:
-			break; //NOP
+			break;
 	}
 }
 
