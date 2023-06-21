@@ -4,6 +4,12 @@ void i8080_step(i8080 *const c);
 void i8080_exec(i8080 *const c, uint8_t opcode);
 
 static inline
+uint16_t i8080_hl(i8080 *const c)
+{
+	return (c->h << 8) | c->l;
+}
+
+static inline
 bool is_parity(uint8_t val)
 {
 	val ^= (val >> 4);
@@ -57,9 +63,37 @@ void i8080_sub(i8080 *const c, uint8_t *reg, uint8_t val, bool cf)
 }
 
 static inline
-uint8_t i8080_hl(i8080 *const c)
+uint8_t i8080_inr(i8080 *const c, uint8_t val)
 {
-	return (c->h << 8) | c->l;
+	uint8_t result = val + 1;
+	c->hf = (result & 0xf) == 0;
+	i8080_set_zsp(c, val);
+	return result;
+}
+
+static inline
+void i8080_inrm(i8080 *const c)
+{
+	uint16_t addr = i8080_hl(c);
+	uint8_t val = i8080_inr(c, c->read_byte(c, addr));
+	c->write_byte(c, addr, val);
+}
+
+static inline
+uint8_t i8080_dec(i8080 *const c, uint8_t val)
+{
+	uint8_t result = val - 1;
+	c->hf = !((result & 0xf) == 0xf);
+	i8080_set_zsp(c, val);
+	return result;
+}
+
+static inline
+void i8080_decm(i8080 *const c)
+{
+	uint16_t addr = i8080_hl(c);
+	uint8_t val = i8080_dec(c, c->read_byte(c, addr));
+	c->write_byte(c, addr, val);
 }
 
 void i8080_exec(i8080 *const c, uint8_t opcode)
@@ -131,6 +165,26 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0xde:
 			i8080_sub(c, &c->a, c->read_byte(c, c->pc++), c->cf);
 			break;
+		// INR
+		case 0x04: c->b = i8080_inr(c, c->b); break;
+		case 0x14: c->d = i8080_inr(c, c->d); break;
+		case 0x24: c->h = i8080_inr(c, c->h); break;
+		case 0x0c: c->c = i8080_inr(c, c->c); break;
+		case 0x1c: c->e = i8080_inr(c, c->e); break;
+		case 0x2c: c->l = i8080_inr(c, c->l); break;
+		case 0x3c: c->a = i8080_inr(c, c->a); break;
+		// DCR
+		case 0x05: c->b = i8080_dec(c, c->b); break;
+		case 0x15: c->d = i8080_dec(c, c->d); break;
+		case 0x25: c->h = i8080_dec(c, c->h); break;
+		case 0x0d: c->c = i8080_dec(c, c->c); break;
+		case 0x1d: c->e = i8080_dec(c, c->e); break;
+		case 0x2d: c->l = i8080_dec(c, c->l); break;
+		case 0x3d: c->a = i8080_dec(c, c->a); break;
+		// INR M
+		case 0x34: i8080_inrm(c); break;
+		// DCR M
+		case 0x35: i8080_decm(c); break;
 		// NOP
 		case 0x00:
 		case 0x10:
