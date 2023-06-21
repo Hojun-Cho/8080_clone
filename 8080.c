@@ -99,7 +99,7 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0xce:
 			i8080_add(c, &c->a, c->read_byte(c, c->pc++), c->cf);
 			break;		
-		// SUB M
+		// SUB R
 		case 0x90: i8080_sub(c, &c->a, c->b, 0); break;
 		case 0x91: i8080_sub(c, &c->a, c->c, 0); break;
 		case 0x92: i8080_sub(c, &c->a, c->d, 0); break;
@@ -107,6 +107,30 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x94: i8080_sub(c, &c->a, c->h, 0); break;
 		case 0x95: i8080_sub(c, &c->a, c->l, 0); break;
 		case 0x97: i8080_sub(c, &c->a, c->a, 0); break;
+		// SBB R
+		case 0x98: i8080_sub(c, &c->a, c->b, c->cf); break;
+		case 0x99: i8080_sub(c, &c->a, c->c, c->cf); break;
+		case 0x9a: i8080_sub(c, &c->a, c->d, c->cf); break;
+		case 0x9b: i8080_sub(c, &c->a, c->e, c->cf); break;
+		case 0x9c: i8080_sub(c, &c->a, c->h, c->cf); break;
+		case 0x9d: i8080_sub(c, &c->a, c->l, c->cf); break;
+		case 0x9f: i8080_sub(c, &c->a, c->a, c->cf); break;
+		// SUB M
+		case 0x96:
+			i8080_sub(c, &c->a, c->read_byte(c, i8080_hl(c)), 0);
+			break;	
+		// SBB M
+		case 0x9e:
+			i8080_sub(c, &c->a, c->read_byte(c, i8080_hl(c)), c->cf);
+			break;
+		// SUI
+		case 0xd6:
+			i8080_sub(c, &c->a, c->read_byte(c, c->pc++), 0);
+			break;
+		// SBI
+		case 0xde:
+			i8080_sub(c, &c->a, c->read_byte(c, c->pc++), c->cf);
+			break;
 		// NOP
 		case 0x00:
 		case 0x10:
