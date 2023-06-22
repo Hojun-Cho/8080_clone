@@ -10,6 +10,18 @@ uint16_t i8080_hl(i8080 *const c)
 }
 
 static inline
+uint16_t i8080_bc(i8080 *const c)
+{
+	return (c->b << 8) | c->c;
+}
+
+static inline
+uint16_t i8080_de(i8080 *const c)
+{
+	return (c->d << 8) | c->e;
+}
+
+static inline
 bool is_parity(uint8_t val)
 {
 	val ^= (val >> 4);
@@ -94,6 +106,66 @@ void i8080_decm(i8080 *const c)
 	uint16_t addr = i8080_hl(c);
 	uint8_t val = i8080_dec(c, c->read_byte(c, addr));
 	c->write_byte(c, addr, val);
+}
+
+static inline
+void i8080_inx_bc(i8080 *const c)
+{
+	uint16_t val = i8080_bc(c) + 1;
+	c->b = val >> 8;
+	c->c = val & 0xff;
+}
+
+static inline
+void i8080_inx_de(i8080 *const c)
+{
+	uint16_t val = i8080_de(c) + 1;
+	c->d = val >> 8;
+	c->e = val & 0xff;
+}
+
+static inline
+void i8080_inx_hl(i8080 *const c)
+{
+	uint16_t val = i8080_hl(c) + 1;
+	c->h = val >> 8;
+	c->l = val & 0xff;
+}
+
+static inline
+void i8080_inx_sp(i8080 *const c)
+{
+	c->sp += 1;
+}
+
+static inline
+void i8080_dcx_bc(i8080 *const c)
+{
+	uint16_t val = i8080_bc(c) - 1;
+	c->b = val >> 8;
+	c->c = val & 0xff;
+}
+
+static inline
+void i8080_dcx_de(i8080 *const c)
+{
+	uint16_t val = i8080_de(c) - 1;
+	c->d = val >> 8;
+	c->e = val & 0xff;
+}
+
+static inline
+void i8080_dcx_hl(i8080 *const c)
+{
+	uint16_t val = i8080_hl(c) - 1;
+	c->h = val >> 8;
+	c->l = val & 0xff;
+}
+
+static inline
+void i8080_dcx_sp(i8080 *const c)
+{
+	c->sp -= 1;
 }
 
 void i8080_exec(i8080 *const c, uint8_t opcode)
@@ -185,6 +257,17 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x34: i8080_inrm(c); break;
 		// DCR M
 		case 0x35: i8080_decm(c); break;
+		// INX
+		case 0x03: i8080_inx_bc(c); break;
+		case 0x13: i8080_inx_de(c); break;
+		case 0x23: i8080_inx_hl(c); break;
+		case 0x33: i8080_inx_sp(c); break;
+		// DCX
+		case 0x0b: i8080_dcx_bc(c); break;
+		case 0x1b: i8080_dcx_de(c); break;
+		case 0x2b: i8080_dcx_hl(c); break;
+		case 0x3b: i8080_dcx_sp(c); break;
+		// DCX
 		// NOP
 		case 0x00:
 		case 0x10:
