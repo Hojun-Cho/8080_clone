@@ -189,6 +189,70 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 
 	switch (opcode) 
 	{
+		// MOV A, R
+		case 0x78: c->a = c->b; break;
+		case 0x79: c->a = c->c; break;
+		case 0x7a: c->a = c->d; break;
+		case 0x7b: c->a = c->e; break;
+		case 0x7c: c->a = c->h; break;
+		case 0x7d: c->a = c->l; break;
+		case 0x7f: c->a = c->a; break;
+		
+		// MOV B, R
+		case 0x40: c->b = c->b; break;
+		case 0x41: c->b = c->c; break;
+		case 0x42: c->b = c->d; break;
+		case 0x43: c->b = c->e; break;
+		case 0x44: c->b = c->h; break;
+		case 0x45: c->b = c->l; break;
+		case 0x47: c->b = c->a; break;
+		case 0x47: c->b = c->a; break;
+	
+		// MOV C R	
+		case 0x48: c->c = c->b; break;
+		case 0x49: c->c = c->c; break;
+		case 0x4a: c->c = c->d; break;
+		case 0x4b: c->c = c->e; break;
+		case 0x4c: c->c = c->h; break;
+		case 0x4d: c->c = c->l; break;
+		case 0x4f: c->c = c->a; break;
+		
+		// MOV D R
+		case 0x50: c->d = c->b; break;
+		case 0x51: c->d = c->c; break;
+		case 0x52: c->d = c->d; break;
+		case 0x53: c->d = c->e; break;
+		case 0x54: c->d = c->h; break;
+		case 0x56: c->d = c->l; break;
+		case 0x57: c->d = c->a; break;
+
+		// MOV E R
+		case 0x58: c->e = c->b; break;
+		case 0x59: c->e = c->c; break;
+		case 0x5a: c->e = c->d; break;
+		case 0x5b: c->e = c->e; break;
+		case 0x5c: c->e = c->h; break;
+		case 0x5e: c->e = c->l; break;
+		case 0x5f: c->e = c->a; break;
+
+		// MOV H R
+		case 0x60: c->h = c->b; break;
+		case 0x61: c->h = c->c; break;
+		case 0x62: c->h = c->d; break;
+		case 0x63: c->h = c->e; break;
+		case 0x64: c->h = c->h; break;
+		case 0x66: c->h = c->l; break;
+		case 0x67: c->h = c->a; break;
+
+		// MOV L R
+		case 0x68: c->l = c->b; break;
+		case 0x69: c->l = c->c; break;
+		case 0x6a: c->l = c->d; break;
+		case 0x6b: c->l = c->e; break;
+		case 0x6c: c->l = c->h; break;
+		case 0x6e: c->l = c->l; break;
+		case 0x6f: c->l = c->a; break;
+
 		// ADD
 		case 0x80: i8080_add(c, &c->a, c->b, 0); break;
 		case 0x81: i8080_add(c, &c->a, c->c, 0); break;
