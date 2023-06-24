@@ -154,6 +154,21 @@ void i8080_dcx_de(i8080 *const c)
 	c->e = val & 0xff;
 }
 
+/*The content of the register pair rp is added to the*/
+/*content of the register pair Hand L. The result is*/
+/*placed in the register pair Hand L. Note: Only the*/
+/*CY flag is affected. It is set if there is a carry out of*/
+/*the double precision add; otherwise it is reset.*/
+static inline
+void i8080_dad(i8080 *const c, uint16_t val)
+{
+	val += i8080_hl(c);
+	 // how to set cf ??? i don't know not yet...
+	c->cf = 0;	
+	c->h = val >> 8;
+	c->l = val & 0xff;
+}
+
 static inline
 void i8080_dcx_hl(i8080 *const c)
 {
@@ -267,7 +282,11 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x1b: i8080_dcx_de(c); break;
 		case 0x2b: i8080_dcx_hl(c); break;
 		case 0x3b: i8080_dcx_sp(c); break;
-		// DCX
+		// DAD
+		case 0x09: i8080_dad(c, i8080_bc(c)); break;
+		case 0x19: i8080_dad(c, i8080_de(c)); break;
+		case 0x29: i8080_dad(c, i8080_hl(c)); break;
+		case 0x39: i8080_dad(c, c->sp); break;
 		// NOP
 		case 0x00:
 		case 0x10:
