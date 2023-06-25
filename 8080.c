@@ -253,6 +253,26 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x6e: c->l = c->l; break;
 		case 0x6f: c->l = c->a; break;
 
+		// MOV R, M
+		case 0x7e: c->a = c->read_byte(c, i8080_hl(c)); break;
+		case 0x46: c->b = c->read_byte(c, i8080_hl(c)); break;
+		case 0x4e: c->c = c->read_byte(c, i8080_hl(c)); break;
+		case 0x4e: c->c = c->read_byte(c, i8080_hl(c)); break;
+		case 0x56: c->d = c->read_byte(c, i8080_hl(c)); break;
+		case 0x5e: c->e = c->read_byte(c, i8080_hl(c)); break;
+		case 0x66: c->h = c->read_byte(c, i8080_hl(c)); break;
+		case 0x66: c->h = c->read_byte(c, i8080_hl(c)); break;
+		case 0x6e: c->l = c->read_byte(c, i8080_hl(c)); break;
+		
+		// MOV M, R
+		case 0x70: c->write_byte(c, i8080_hl(c), c->b); break;		
+		case 0x71: c->write_byte(c, i8080_hl(c), c->c); break;		
+		case 0x72: c->write_byte(c, i8080_hl(c), c->d); break;		
+		case 0x73: c->write_byte(c, i8080_hl(c), c->e); break;		
+		case 0x74: c->write_byte(c, i8080_hl(c), c->h); break;		
+		case 0x75: c->write_byte(c, i8080_hl(c), c->l); break;		
+		case 0x77: c->write_byte(c, i8080_hl(c), c->a); break;		
+
 		// ADD
 		case 0x80: i8080_add(c, &c->a, c->b, 0); break;
 		case 0x81: i8080_add(c, &c->a, c->c, 0); break;
