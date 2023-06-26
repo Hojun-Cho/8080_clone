@@ -253,6 +253,37 @@ void i8080_cond_jmp(i8080 *const c, bool condition)
 		i8080_jmp(c, addr);	
 }
 
+static inline
+void i8080_push(i8080 *c const c, uint16_t val)
+{
+	c->sp -= 2;
+	/* before
+	  low
+		val 1 <- c->sp
+		val 0
+			
+	  high	
+	*/
+	/* after
+	  low
+		val 2 <- c->sp
+		val 1 
+		val 0
+			
+	  high	
+	*/
+
+	i8080_write_word(c, c->sp, val);
+}
+
+static inline
+uint16_t i8080_pop(i8080 *c const c)
+{
+	uint16_t val = i8080_read_word(c, c->sp);
+	c->sp += 2;
+	return (val);	
+}
+
 void i8080_exec(i8080 *const c, uint8_t opcode)
 {
 	c->cyc += OPCODES_CYCLES[opcode];
@@ -480,7 +511,17 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x19: i8080_dad(c, i8080_get_de(c)); break;
 		case 0x29: i8080_dad(c, i8080_get_hl(c)); break;
 		case 0x39: i8080_dad(c, c->sp); break;
-	
+
+		// PUSH
+		case 0xc5: i8080_push(c, i8080_get_bc(c)); break;
+		case 0xd5: i8080_push(c, i8080_get_de(c)); break;
+		case 0xe5: i8080_push(c, i8080_get_hl(c)); break;	
+
+		// POP
+		case 0xc1: i8080_set_bc(c, i8080_pop(c)); break;
+		case 0xd1: i8080_set_bc(c, i8080_pop(c)); break;
+		case 0xe1: i8080_set_bc(c, i8080_pop(c)); break;
+		
 		// JMP:
 		case 0xc3: i8080_jmp(c, i8080_next_word(c)); break;
 		// ZERO FLAG
