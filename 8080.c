@@ -239,6 +239,20 @@ void i8080_dcx_sp(i8080 *const c)
 	c->sp -= 1;
 }
 
+static inline
+void i8080_jmp(i8080 *const c, uint16_t addr)
+{
+	c->pc = addr;
+}
+
+static inline
+void i8080_cond_jmp(i8080 *const c, bool condition)
+{
+	uint16_t addr = i8080_next_word(c);
+	if (condition)
+		i8080_jmp(c, addr);	
+}
+
 void i8080_exec(i8080 *const c, uint8_t opcode)
 {
 	c->cyc += OPCODES_CYCLES[opcode];
@@ -466,6 +480,22 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x19: i8080_dad(c, i8080_get_de(c)); break;
 		case 0x29: i8080_dad(c, i8080_get_hl(c)); break;
 		case 0x39: i8080_dad(c, c->sp); break;
+	
+		// JMP:
+		case 0xc3: i8080_jmp(c, i8080_next_word(c)); break;
+		// ZERO FLAG
+		case 0xc2: i8080_cond_jmp(c, c->zf == 0); break;
+		case 0xca: i8080_cond_jmp(c, c->zf == 1); break;
+		// CARRY FLAG
+		case 0xd2: i8080_cond_jmp(c, c->cf == 0); break;
+		case 0xda: i8080_cond_jmp(c, c->cf == 1); break;
+		// PARITIY FLAG
+		case 0xe2: i8080_cond_jmp(c, c->pf == 0); break;
+		case 0xea: i8080_cond_jmp(c, c->pf == 1); break;
+		// SIGN FLAG
+		case 0xf2: i8080_cond_jmp(c, c->sf == 0); break;
+		case 0xfa: i8080_cond_jmp(c, c->sf == 1); break;
+
 		// NOP
 		case 0x00:
 		case 0x10:
