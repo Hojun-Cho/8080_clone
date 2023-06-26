@@ -6,8 +6,13 @@ void i8080_exec(i8080 *const c, uint8_t opcode);
 static inline
 uint16_t i8080_next_word(i8080 *c)
 {
+	uint16_t val;
+
+	val = read_byte(c, c->pc + 1);
+	val <<= 8;
+	val |= read_byte(c, c->pc);
 	c->pc += 2;
-	return (((uint16_t)c->read_byte(c) << 8) | c->read_byte(c));
+	return val;
 }
 
 static inline
@@ -286,6 +291,12 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x11: i8080_set_de(c, i8080_next_word(c)); break;
 		case 0x21: i8080_set_hl(c, i8080_next_word(c)); break;
 		case 0x31: c->sp = i8080_next_word(c);
+		
+		// LDA
+		case 0x0a: c->a = c->read_byte(c, i8080_get_bc(c)); break;
+		case 0x1a: c->a = c->read_byte(c, i8080_get_de(c)); break;
+		case 0x3a: c->a = c->read_byte(c, i8080_next_word(c)); break;
+		
 		// MOV R, M
 		case 0x7e: c->a = c->read_byte(c, i8080_get_hl(c)); break;
 		case 0x46: c->b = c->read_byte(c, i8080_get_hl(c)); break;
