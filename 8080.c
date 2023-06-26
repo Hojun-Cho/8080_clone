@@ -4,15 +4,29 @@ void i8080_step(i8080 *const c);
 void i8080_exec(i8080 *const c, uint8_t opcode);
 
 static inline
-uint16_t i8080_next_word(i8080 *c)
+uint16_t i8080_read_word(i8080 *c, uint16_t addr)
 {
 	uint16_t val;
 
-	val = read_byte(c, c->pc + 1);
+	val = read_byte(c, addr + 1);
 	val <<= 8;
-	val |= read_byte(c, c->pc);
+	val |= read_byte(c, addr);
+	return val;
+}
+
+static inline
+uint16_t i8080_next_word(i8080 *c)
+{
+	uint16_t val = i8080_read_word(c, c->pc);
 	c->pc += 2;
 	return val;
+}
+
+static inline
+void i8080_write_word(i8080 *c, uint16_t addr, uint16_t val)
+{
+	c->write_byte(c, addr, val & 0xff);
+	c->write_byte(c, addr + 1, val >> 8);
 }
 
 static inline
@@ -52,6 +66,15 @@ void i8080_set_de(i8080 *const c, uint16_t val)
 {
 	c->d = val >> 8;
 	c->e = val & 0xff;
+}
+
+static inline
+void i8080_xchg(i8080 *const c)
+{
+	uint16_t val = i8080_get_de(c);
+
+	i8080_set_de(c,i8080_get_hl(c));
+	i8080_set_hl(c, val);
 }
 
 static inline
@@ -286,17 +309,6 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x6e: c->l = c->l; break;
 		case 0x6f: c->l = c->a; break;
 
-		// LXI
-		case 0x01: i8080_set_bc(c, i8080_next_word(c)); break;
-		case 0x11: i8080_set_de(c, i8080_next_word(c)); break;
-		case 0x21: i8080_set_hl(c, i8080_next_word(c)); break;
-		case 0x31: c->sp = i8080_next_word(c);
-		
-		// LDA
-		case 0x0a: c->a = c->read_byte(c, i8080_get_bc(c)); break;
-		case 0x1a: c->a = c->read_byte(c, i8080_get_de(c)); break;
-		case 0x3a: c->a = c->read_byte(c, i8080_next_word(c)); break;
-		
 		// MOV R, M
 		case 0x7e: c->a = c->read_byte(c, i8080_get_hl(c)); break;
 		case 0x46: c->b = c->read_byte(c, i8080_get_hl(c)); break;
@@ -317,7 +329,44 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x75: c->write_byte(c, i8080_get_hl(c), c->l); break;		
 		case 0x77: c->write_byte(c, i8080_get_hl(c), c->a); break;		
 
+		// LXI
+		case 0x01: i8080_set_bc(c, i8080_next_word(c)); break;
+		case 0x11: i8080_set_de(c, i8080_next_word(c)); break;
+		case 0x21: i8080_set_hl(c, i8080_next_word(c)); break;
+		case 0x31: c->sp = i8080_next_word(c);
+		
+		// LDA
+		case 0x0a: c->a = c->read_byte(c, i8080_get_bc(c)); break;
+		case 0x1a: c->a = c->read_byte(c, i8080_get_de(c)); break;
+		case 0x3a: c->a = c->read_byte(c, i8080_next_word(c)); break;
 
+		// STAX
+		case 0x02: c->write_byte(c, i8080_get_bc(c), c->a); break;
+		case 0x12: c->write_byte(c, i8080_get_de(c), c->a); break;
+
+		// STA
+		case 0x32: c->write_byte(c, i8080_next_word(c), c->a); break;
+
+		// LHLD M
+		case 0x2a: 
+			i8080_set_hl(c, c-> i8080_read_word(c,
+						i8080_next_word(c)));
+			break;
+		
+		// LDAX RP
+		case 0x0a:
+			c->a = c->read_byte(c, i8080_get_bc(c));
+			break;
+		case 0x1a:
+			c->a = c->read_byte(c, i8080_get_de(c));
+			break;
+		// SHLD M
+		case 0x22:
+			i8080_write_word(c, i8080_next_word(c) ,i8080_get_hl(c));
+			break;
+		
+		// XCHG:
+		case 0xeb: i8080_xchg(c); break;
 
 		// ADD
 		case 0x80: i8080_add(c, &c->a, c->b, 0); break;
