@@ -277,11 +277,37 @@ void i8080_push(i8080 *const c, uint16_t val)
 }
 
 static inline
+void i8080_push_psw(i8080 *const c)
+{
+	uint8_t status = 0;
+	status |= c->sf << 7;
+	status |= c->zf << 6;
+	status |= c->hf << 4;
+	status |= c->pf << 2;
+	status |= c->cf << 0;
+	i8080_push(c, (c->a << 8) | status);	
+}
+
+static inline
 uint16_t i8080_pop(i8080 *const c)
 {
 	uint16_t val = i8080_read_word(c, c->sp);
 	c->sp += 2;
 	return (val);	
+}
+
+static inline
+void i8080_pop_psw(i8080 *const c)
+{
+	uint16_t status = i8080_pop(c);
+	uint8_t flags = status & 0xff;
+	c->a = status >> 8;
+	c->sf = (flags >> 7) & 0x01;
+	c->zf = (flags >> 6) & 0x01;
+	c->hf = (flags >> 4) & 0x01;
+	c->pf = (flags >> 2) & 0x01;
+	c->cf = (flags >> 0) & 0x01;
+	c->sp += 2;
 }
 
 static inline
@@ -523,12 +549,13 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0xc5: i8080_push(c, i8080_get_bc(c)); break;
 		case 0xd5: i8080_push(c, i8080_get_de(c)); break;
 		case 0xe5: i8080_push(c, i8080_get_hl(c)); break;	
+		case 0xf5: i8080_push_psw(c); break;
 
 		// POP
 		case 0xc1: i8080_set_bc(c, i8080_pop(c)); break;
 		case 0xd1: i8080_set_de(c, i8080_pop(c)); break;
 		case 0xe1: i8080_set_hl(c, i8080_pop(c)); break;
-	
+		case 0xf1: i8080_pop_psw(c); break;	
 		// JMP:
 		case 0xc3: i8080_jmp(c, i8080_next_word(c)); break;
 		// ZERO FLAG
