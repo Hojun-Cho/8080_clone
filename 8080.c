@@ -78,6 +78,15 @@ void i8080_xchg(i8080 *const c)
 }
 
 static inline
+void i8080_xthl(i8080 *const c)
+{
+	uint16_t val = i8080_read_word(c, c->sp);
+
+	i8080_write_word(c, c->sp, i8080_get_hl(c));
+	i8080_set_hl(c, val);
+}
+
+static inline
 bool is_parity(uint8_t val)
 {
 	val ^= (val >> 4);
@@ -555,7 +564,20 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0xc1: i8080_set_bc(c, i8080_pop(c)); break;
 		case 0xd1: i8080_set_de(c, i8080_pop(c)); break;
 		case 0xe1: i8080_set_hl(c, i8080_pop(c)); break;
-		case 0xf1: i8080_pop_psw(c); break;	
+		case 0xf1: i8080_pop_psw(c); break;
+
+		// XTHL
+		case 0xe3: i8080_xthl(c); break;
+		// SPHL
+		case 0xf9: c->sp = i8080_get_hl(c);
+
+		// IN PORT 
+		case 0xdb: c->a = c->port_in(c, c->read_byte(c, c->pc++)); break; 
+		// OUT PORT
+		case 0xd3: c->port_out(c, c->read_byte(c, c->pc++), c->a); break;
+		// HLT
+		case 0x76: c->halted = 1; break;
+
 		// JMP:
 		case 0xc3: i8080_jmp(c, i8080_next_word(c)); break;
 		// ZERO FLAG
