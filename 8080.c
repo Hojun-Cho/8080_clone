@@ -629,7 +629,15 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		
 		// PCHL
 		case 0xe9: c->pc = i8080_get_hl(c);  break;
-
+	
+		// DI
+		case 0xf3: c->iff = 0;  break;
+		// EI
+		case 0xfb:
+			c->iff = 1;
+			// next excute run interrupt code
+			c->interrupt_delay = 1;
+			break;
 		// NOP
 		case 0x00:
 		case 0x10:

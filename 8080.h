@@ -75,6 +75,10 @@ struct cpu_i8080
 	// sign , zero , half carry, parity carry, carry flag, interrupt flip-flop
 	bool sf, zf, hf, pf , cf, iff;
 	bool halted;
+	
+	bool interrupt_pending;
+	uint8_t interrupt_vector;
+	uint8_t interrupt_delay;
 };
 
 void i8080_exec(i8080 *const c, uint8_t opcode);
