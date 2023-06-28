@@ -8,9 +8,9 @@ uint16_t i8080_read_word(i8080 *c, uint16_t addr)
 {
 	uint16_t val;
 
-	val = read_byte(c, addr + 1);
+	val = c->read_byte(c, addr + 1);
 	val <<= 8;
-	val |= read_byte(c, addr);
+	val |= c->read_byte(c, addr);
 	return val;
 }
 
@@ -254,7 +254,7 @@ void i8080_cond_jmp(i8080 *const c, bool condition)
 }
 
 static inline
-void i8080_push(i8080 *c const c, uint16_t val)
+void i8080_push(i8080 *const c, uint16_t val)
 {
 	c->sp -= 2;
 	/* before
@@ -277,11 +277,32 @@ void i8080_push(i8080 *c const c, uint16_t val)
 }
 
 static inline
-uint16_t i8080_pop(i8080 *c const c)
+uint16_t i8080_pop(i8080 *const c)
 {
 	uint16_t val = i8080_read_word(c, c->sp);
 	c->sp += 2;
 	return (val);	
+}
+
+static inline
+void i8080_call(i8080 *const c, uint16_t addr)
+{
+	i8080_push(c, c->pc);
+	i8080_jmp(c, addr);
+}
+
+static inline
+void i8080_return(i8080 *const c)
+{
+	c->pc = i8080_pop(c);
+}
+
+static inline
+void i8080_cond_return(i8080 *const c, bool cond)
+{
+	if (!cond)
+		return;
+	i8080_return(c);
 }
 
 void i8080_exec(i8080 *const c, uint8_t opcode)
@@ -307,7 +328,6 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x44: c->b = c->h; break;
 		case 0x45: c->b = c->l; break;
 		case 0x47: c->b = c->a; break;
-		case 0x47: c->b = c->a; break;
 	
 		// MOV C R	
 		case 0x48: c->c = c->b; break;
@@ -324,7 +344,6 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x52: c->d = c->d; break;
 		case 0x53: c->d = c->e; break;
 		case 0x54: c->d = c->h; break;
-		case 0x56: c->d = c->l; break;
 		case 0x57: c->d = c->a; break;
 
 		// MOV E R
@@ -333,7 +352,6 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x5a: c->e = c->d; break;
 		case 0x5b: c->e = c->e; break;
 		case 0x5c: c->e = c->h; break;
-		case 0x5e: c->e = c->l; break;
 		case 0x5f: c->e = c->a; break;
 
 		// MOV H R
@@ -342,7 +360,6 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x62: c->h = c->d; break;
 		case 0x63: c->h = c->e; break;
 		case 0x64: c->h = c->h; break;
-		case 0x66: c->h = c->l; break;
 		case 0x67: c->h = c->a; break;
 
 		// MOV L R
@@ -351,17 +368,14 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0x6a: c->l = c->d; break;
 		case 0x6b: c->l = c->e; break;
 		case 0x6c: c->l = c->h; break;
-		case 0x6e: c->l = c->l; break;
 		case 0x6f: c->l = c->a; break;
 
 		// MOV R, M
 		case 0x7e: c->a = c->read_byte(c, i8080_get_hl(c)); break;
 		case 0x46: c->b = c->read_byte(c, i8080_get_hl(c)); break;
 		case 0x4e: c->c = c->read_byte(c, i8080_get_hl(c)); break;
-		case 0x4e: c->c = c->read_byte(c, i8080_get_hl(c)); break;
 		case 0x56: c->d = c->read_byte(c, i8080_get_hl(c)); break;
 		case 0x5e: c->e = c->read_byte(c, i8080_get_hl(c)); break;
-		case 0x66: c->h = c->read_byte(c, i8080_get_hl(c)); break;
 		case 0x66: c->h = c->read_byte(c, i8080_get_hl(c)); break;
 		case 0x6e: c->l = c->read_byte(c, i8080_get_hl(c)); break;
 		
@@ -394,17 +408,10 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 
 		// LHLD M
 		case 0x2a: 
-			i8080_set_hl(c, c-> i8080_read_word(c,
+			i8080_set_hl(c, i8080_read_word(c,
 						i8080_next_word(c)));
 			break;
 		
-		// LDAX RP
-		case 0x0a:
-			c->a = c->read_byte(c, i8080_get_bc(c));
-			break;
-		case 0x1a:
-			c->a = c->read_byte(c, i8080_get_de(c));
-			break;
 		// SHLD M
 		case 0x22:
 			i8080_write_word(c, i8080_next_word(c) ,i8080_get_hl(c));
@@ -519,9 +526,9 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 
 		// POP
 		case 0xc1: i8080_set_bc(c, i8080_pop(c)); break;
-		case 0xd1: i8080_set_bc(c, i8080_pop(c)); break;
-		case 0xe1: i8080_set_bc(c, i8080_pop(c)); break;
-		
+		case 0xd1: i8080_set_de(c, i8080_pop(c)); break;
+		case 0xe1: i8080_set_hl(c, i8080_pop(c)); break;
+	
 		// JMP:
 		case 0xc3: i8080_jmp(c, i8080_next_word(c)); break;
 		// ZERO FLAG
@@ -536,6 +543,43 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		// SIGN FLAG
 		case 0xf2: i8080_cond_jmp(c, c->sf == 0); break;
 		case 0xfa: i8080_cond_jmp(c, c->sf == 1); break;
+		
+		// CALL
+		case 0xcd:
+		case 0xdd:
+		case 0xed:
+		case 0xfd: 
+			i8080_call(c, i8080_next_word(c)); break;
+		
+		// RST (RESTART)
+		case 0xc7: i8080_call(c, 0x00); break;
+		case 0xcf: i8080_call(c, 0x08); break;
+		case 0xd7: i8080_call(c, 0x10); break;
+		case 0xdf: i8080_call(c, 0x18); break;
+		case 0xe7: i8080_call(c, 0x20); break;
+		case 0xef: i8080_call(c, 0x28); break;
+		case 0xf7: i8080_call(c, 0x30); break;
+		case 0xff: i8080_call(c, 0x38); break;
+
+		// RET
+		case 0xc9:
+		case 0xd9:
+			i8080_return(c); break;
+		// ZERO FLAG
+		case 0xc0: i8080_cond_return(c, c->zf == 0); break;
+		case 0xc8: i8080_cond_return(c, c->zf == 1); break;
+		// CARRY FLAG
+		case 0xd0: i8080_cond_return(c, c->cf == 0); break;
+		case 0xd8: i8080_cond_return(c, c->cf == 1); break;
+		// PARITIY FLAG
+		case 0xe0: i8080_cond_return(c, c->pf == 0); break;
+		case 0xe8: i8080_cond_return(c, c->pf == 1); break;
+		// SIGN FLAG
+		case 0xf0: i8080_cond_return(c, c->sf == 0); break;
+		case 0xf8: i8080_cond_return(c, c->sf == 1); break;
+		
+		// PCHL
+		case 0xe9: c->pc = i8080_get_hl(c);  break;
 
 		// NOP
 		case 0x00:
