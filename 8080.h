@@ -81,6 +81,7 @@ struct cpu_i8080
 	uint8_t interrupt_delay;
 };
 
+void i8080_step(i8080 *const c);
 void i8080_exec(i8080 *const c, uint8_t opcode);
 
 
