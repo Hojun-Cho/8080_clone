@@ -68,7 +68,7 @@ struct cpu_i8080
 	uint8_t (*port_in)(i8080*, uint8_t); // // read from port
 	void (*port_out)(i8080*, uint8_t, uint8_t); // write to port
 
-	uint32_t cyc;
+	unsigned long cyc;
 	uint16_t pc, sp;
 	// registers
 	uint8_t a, b, c, d, e, h, l; 
