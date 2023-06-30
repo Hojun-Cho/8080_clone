@@ -110,7 +110,7 @@ void i8080_set_zsp(i8080 *const c, uint8_t val)
 	if (val >> 7)
 		c->sf = true;
 	if (is_parity(val))
-		c->sf = true;
+		c->pf = true;
 }
 
 static inline
@@ -563,6 +563,7 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		/**** BRANCH GROUP ****/
 		// JMP:
 		case 0xc3: i8080_jmp(c, i8080_next_word(c)); break;
+		case 0xcb: i8080_jmp(c, i8080_next_word(c)); break;
 		// ZERO FLAG
 		case 0xc2: i8080_cond_jmp(c, c->zf == 0); break;
 		case 0xca: i8080_cond_jmp(c, c->zf == 1); break;
@@ -580,7 +581,8 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 		case 0xdd:
 		case 0xed:
 		case 0xfd: 
-			i8080_call(c, i8080_next_word(c)); break;
+			i8080_call(c, i8080_next_word(c));
+			break;
 		// RST (RESTART)
 		case 0xc7: i8080_call(c, 0x00); break;
 		case 0xcf: i8080_call(c, 0x08); break;

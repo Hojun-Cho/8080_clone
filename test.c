@@ -7,7 +7,7 @@
 // memory callbacks
 #define MEMORY_SIZE 0x10000
 
-static uint8_t memory[MEMORY_SIZE];
+static uint8_t* memory = NULL;
 static bool test_finished = 0;
 
 
@@ -59,7 +59,7 @@ static inline int load_file(const char* filename, uint16_t addr) {
   }
 
   // copying the bytes in memory:
-  size_t result = fread(&memory[addr], sizeof(uint8_t), file_size, f);
+  size_t result = fread(&(memory[addr]), sizeof(uint8_t), file_size, f);
   if (result != file_size) {
     fprintf(stderr, "error: while reading file '%s'\n", filename);
     return 1;
@@ -116,5 +116,6 @@ static inline void run_test(
 int main()
 {
 
+	memory = malloc(MEMORY_SIZE);
 	run_test("cpu_tests/CPUTEST.COM", 4924LU);
 }
