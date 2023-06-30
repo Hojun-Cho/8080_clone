@@ -347,6 +347,16 @@ void i8080_cond_return(i8080 *const c, bool cond)
 	i8080_return(c);
 }
 
+static inline
+void i8080_ana(i8080 *const c, uint8_t val)
+{
+	uint8_t res = c->a & val;
+	c->af = 0;
+	c->hf = ((c->a | val) & 0x08) != 0;
+	i8080_set_zsp(c, val);
+	c->a = res;
+}
+
 void i8080_exec(i8080 *const c, uint8_t opcode)
 {
 	c->cyc += OPCODES_CYCLES[opcode];
@@ -644,6 +654,20 @@ void i8080_exec(i8080 *const c, uint8_t opcode)
 			// next excute run interrupt code
 			c->interrupt_delay = 1;
 			break;
+
+		/*** LOGICAL ***/
+		// ANA R
+		case 0xa0: i8080_ana(c, c->b) break;
+		case 0xa1: i8080_ana(c, c->c) break;
+		case 0xa2: i8080_ana(c, c->d) break;
+		case 0xa3: i8080_ana(c, c->e) break;
+		case 0xa4: i8080_ana(c, c->h) break;
+		case 0xa5: i8080_ana(c, c->l) break;
+		case 0xa7: i8080_ana(c, c->a) break;
+		// ANA M
+		case 0xa6: i8080_ana(c, i8080_get_hl(c)); break;
+		// ANI
+		case : i8080_ani(c, i8080_next_byte(c)); break;
 		// NOP
 		case 0x00:
 		case 0x10:
